@@ -1,0 +1,35 @@
+# ============================================================
+# requirements.txt — Project Sentinel
+# ============================================================
+# This file lists every Python library the project needs.
+# When someone runs:  pip install -r requirements.txt
+# Python's package manager (pip) reads this file and
+# downloads + installs every library listed here.
+#
+# The ">=" means "this version OR any newer version is fine".
+# ============================================================
+
+# openenv-core: the Meta OpenEnv framework that defines what a
+# "BaseEnvironment" is — our env.py will inherit from it.
+openenv-core>=0.1.0
+
+# fastapi: a modern, fast web framework for building APIs with Python.
+# app.py uses this to expose our environment over HTTP.
+fastapi>=0.110.0
+
+# uvicorn: a lightning-fast ASGI server that actually *runs* our FastAPI app.
+# Think of FastAPI as the blueprint and uvicorn as the engine.
+uvicorn>=0.29.0
+
+# pydantic: a data-validation library that lets us define typed data models
+# with automatic checking. models.py uses this for ToolCallRequest, Action, etc.
+pydantic>=2.0.0
+
+# openai: the official OpenAI Python client library.
+# inference.py uses this to talk to the LLM that plays the security agent.
+openai>=1.0.0
+
+# python-dotenv: lets us load environment variables from a .env file locally.
+# inference.py needs API_BASE_URL, MODEL_NAME, and HF_TOKEN — this makes
+# local development easier without having to set system env vars manually.
+python-dotenv>=1.0.0
