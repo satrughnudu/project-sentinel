@@ -219,8 +219,11 @@ class SentinelEnv(BaseEnvironment):
         self.episode_history: List[Dict[str, Any]] = []
         self.prior_decisions: List[str] = []
 
-    def reset(self, task_id: str) -> Observation:
+    def reset(self, task_id: Optional[str] = None) -> Observation:
         """Starts a new episode, generating a unique ID and initial observation."""
+        if task_id is None:
+            import random
+            task_id = random.choice(list(TASK_SCENARIOS.keys()))
         if task_id not in TASK_SCENARIOS:
             raise ValueError(f"Unknown task_id: '{task_id}'.")
             
