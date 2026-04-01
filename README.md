@@ -1,3 +1,14 @@
+---
+title: Project Sentinel
+emoji: 🛡️
+colorFrom: gray
+colorTo: red
+sdk: docker
+app_port: 7860
+pinned: false
+tags:
+  - openenv
+---
 # Project Sentinel — AI Security Firewall Environment
 
 > An OpenEnv-compatible environment where an AI agent acts as a security firewall, reviewing tool-call requests from a simulated attacker and deciding to **ALLOW**, **BLOCK**, or **QUARANTINE** each one.
