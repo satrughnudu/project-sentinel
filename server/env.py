@@ -15,7 +15,7 @@ except ImportError:
     class BaseEnvironment:
         pass
 
-from models import ToolCallRequest, Observation, Action, StepResult
+from server.models import ToolCallRequest, Observation, Action, StepResult
 
 # ── SCENARIO DATA ──────────────────────────────────────────
 

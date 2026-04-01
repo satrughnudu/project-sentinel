@@ -3,8 +3,8 @@ import subprocess
 import sys
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from env import SentinelEnv, TASK_SCENARIOS
-from models import Action, Observation, StepResult
+from server.env import SentinelEnv, TASK_SCENARIOS
+from server.models import Action, Observation, StepResult
 
 class ResetRequest(BaseModel):
     task_id: str
@@ -126,3 +126,10 @@ def run_baseline():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to run inference: {str(e)}")
+
+def main():
+    import uvicorn
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
+
+if __name__ == "__main__":
+    main()

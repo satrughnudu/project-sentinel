@@ -18,7 +18,7 @@ except ImportError:
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1").strip()
 MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct").strip()
-HF_TOKEN = os.environ.get("HF_TOKEN", "").strip() or os.environ.get("API_KEY", "").strip()
+HF_TOKEN = os.environ.get("OPENAI_API_KEY", "").strip() or os.environ.get("HF_TOKEN", "").strip() or os.environ.get("API_KEY", "").strip()
 SERVER_URL = os.environ.get("SERVER_URL", "http://localhost:7860").strip()
 
 # Auto-correct Hugging Face URL deprecations gracefully!

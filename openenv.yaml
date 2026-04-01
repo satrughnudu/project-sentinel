@@ -46,14 +46,14 @@ tags:
 
 # ── ENTRY POINTS ────────────────────────────────────────────
 
-# app_entry: tells openenv which Python file and object is the FastAPI app.
+# app: tells openenv which Python file and object is the FastAPI app.
 # Format: "filename_without_py:variable_name_inside_that_file"
-# So "app:app" means → open app.py → find the variable called `app`
-app_entry: "app:app"
+# So "server.app:app" means → open server/app.py → find the variable called `app`
+app: "server.app:app"
 
-# env_entry: tells openenv which file and class is the environment itself.
-# "env:SentinelEnv" means → open env.py → find the class called `SentinelEnv`
-env_entry: "env:SentinelEnv"
+# environment: tells openenv which file and class is the environment itself.
+# "server.env:SentinelEnv" means → open server/env.py → find the class called `SentinelEnv`
+environment: "server.env:SentinelEnv"
 
 
 # ── TASKS ───────────────────────────────────────────────────
