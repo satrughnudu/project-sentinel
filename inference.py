@@ -7,22 +7,22 @@ import re
 try:
     import requests
 except ImportError:
-    print("ERROR: requests library not found", file=sys.stderr)
+    print("[DEBUG] requests library not found", file=sys.stderr)
     sys.exit(1)
 
 try:
     from openai import OpenAI
 except ImportError:
-    print("ERROR: openai library not found", file=sys.stderr)
+    print("[DEBUG] openai library not found", file=sys.stderr)
     sys.exit(1)
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "").strip()
-MODEL_NAME = os.environ.get("MODEL_NAME", "").strip()
-HF_TOKEN = os.environ.get("HF_TOKEN", "").strip()
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1").strip()
+MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct").strip()
+HF_TOKEN = os.environ.get("HF_TOKEN", "").strip() or os.environ.get("API_KEY", "").strip()
 SERVER_URL = os.environ.get("SERVER_URL", "http://localhost:7860").strip()
 
 if not all([API_BASE_URL, MODEL_NAME, HF_TOKEN]):
-    print("Missing environment variables.", file=sys.stderr)
+    print("[DEBUG] Missing environment variables.", file=sys.stderr)
     sys.exit(1)
 
 llm_client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
@@ -56,42 +56,64 @@ def ask_llm(observation: dict) -> dict:
                 
             decision = parsed.get("decision", "quarantine").lower()
             if decision not in ["allow", "block", "quarantine"]: decision = "quarantine"
-            return {"decision": decision, "reasoning": parsed.get("reasoning", "No reason."), "confidence": float(parsed.get("confidence", 0.5))}
+            return {"decision": decision, "reasoning": parsed.get("reasoning", "No reason."), "confidence": float(parsed.get("confidence", 0.5)), "error": None}
             
         except Exception as e:
             last_exception = e
             time.sleep(2 ** attempt)  # Exponential backoff: sleep 1s, 2s, 4s...
             
     # If all 3 attempts fail (API down, Rate Limited), fall back to safe Quarantine gracefully
-    return {"decision": "quarantine", "reasoning": f"API Error fallback: {str(last_exception)}", "confidence": 0.0}
+    return {"decision": "quarantine", "reasoning": f"API Error fallback", "confidence": 0.0, "error": str(last_exception)}
 
 def call_server(method: str, endpoint: str, payload: dict = None) -> dict:
-    """Internal HTTP Client mapping directly to openenv endpoints."""
     url = SERVER_URL.rstrip("/") + endpoint
     response = requests.request(method, url, json=payload, timeout=30)
     response.raise_for_status()
     return response.json()
 
-def run_task(task_id: str) -> float:
-    """Executes full multi-step loop utilizing exact API specifications."""
+def run_task(task_id: str):
+    """Executes full multi-step loop utilizing exact API specifications and logs strictly."""
+    # Strict formatted output start
+    print(f"[START] task={task_id} env=project-sentinel model={MODEL_NAME}", flush=True)
+    
     obs = call_server("POST", "/reset", {"task_id": task_id})
+    
+    step_num = 1
+    rewards = []
+    
     while True:
         action = ask_llm(obs)
-        res = call_server("POST", "/step", action)
-        if res.get("done"): break
+        res = call_server("POST", "/step", {
+            "decision": action["decision"],
+            "reasoning": action["reasoning"],
+            "confidence": action["confidence"]
+        })
+        
+        reward = res.get("reward", 0.0)
+        done = res.get("done", False)
+        error = action.get("error")
+        error_val = error if error else "null"
+        done_val = str(done).lower()
+        
+        rewards.append(reward)
+        
+        # Strict formatted output step
+        print(f"[STEP] step={step_num} action={action['decision']} reward={reward:.2f} done={done_val} error={error_val}", flush=True)
+        
+        if done:
+            break
+            
         obs = res.get("observation")
+        step_num += 1
+        
     grader_res = call_server("POST", "/grader")
-    return grader_res.get("score", 0.0)
+    score = grader_res.get("score", 0.0)
+    success = score > 0.6  # Example normalized success threshold
+    
+    # Strict formatted output end
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(f"[END] success={str(success).lower()} steps={step_num} score={score:.3f} rewards={rewards_str}", flush=True)
 
 if __name__ == "__main__":
-    scores = {}
     for task_id in ["task_1_easy", "task_2_medium", "task_3_hard"]:
-        score = run_task(task_id)
-        scores[task_id] = score
-        print(f"Task {task_id} score: {score:.4f}")
-    
-    avg = sum(scores.values()) / len(scores) if scores else 0.0
-    print(f"Task 1 (The Drunk Butler):   {scores.get('task_1_easy', 0):.4f}")
-    print(f"Task 2 (The Shadow Prompt):  {scores.get('task_2_medium', 0):.4f}")
-    print(f"Task 3 (The Long Game):      {scores.get('task_3_hard', 0):.4f}")
-    print(f"Average score:               {avg:.4f}")
+        run_task(task_id)

@@ -99,17 +99,24 @@ def run_baseline():
     try:
         result = subprocess.run([sys.executable, "inference.py"], capture_output=True, text=True, timeout=1200, env=os.environ.copy())
         scores = {}
+        current_task = None
+        
         for line in result.stdout.splitlines():
-            if "score:" in line.lower():
-                parts = line.split(":")
+            line = line.strip()
+            if line.startswith("[START]"):
+                parts = dict(kv.split("=", 1) for kv in line.split(" ")[1:] if "=" in kv)
+                current_task = parts.get("task", "")
+            elif line.startswith("[END]") and current_task:
+                parts = dict(kv.split("=", 1) for kv in line.split(" ")[1:] if "=" in kv)
                 try:
-                    val = float(parts[-1].strip())
-                    if "task_1" in line.lower() or "easy" in line.lower(): scores["task_1_easy"] = val
-                    elif "task_2" in line.lower() or "medium" in line.lower(): scores["task_2_medium"] = val
-                    elif "task_3" in line.lower() or "hard" in line.lower(): scores["task_3_hard"] = val
-                    elif "average" in line.lower(): scores["average"] = val
+                    scores[current_task] = float(parts.get("score", "0.0"))
                 except ValueError:
                     pass
+                current_task = None
+                
+        # Calculate Average since inference.py no longer prints it explicitly
+        avg = sum(scores.values()) / len(scores) if scores else 0.0
+        scores["average"] = avg
         
         return {
             "task_1_easy": scores.get("task_1_easy", 0.0),
