@@ -21,6 +21,10 @@ MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct").strip()
 HF_TOKEN = os.environ.get("HF_TOKEN", "").strip() or os.environ.get("API_KEY", "").strip()
 SERVER_URL = os.environ.get("SERVER_URL", "http://localhost:7860").strip()
 
+# Auto-correct Hugging Face URL deprecations gracefully!
+if "api-inference.huggingface.co" in API_BASE_URL:
+    API_BASE_URL = "https://router.huggingface.co/hf-inference/v1"
+
 if not all([API_BASE_URL, MODEL_NAME, HF_TOKEN]):
     print("[DEBUG] Missing environment variables.", file=sys.stderr)
     sys.exit(1)
