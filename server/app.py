@@ -7,7 +7,7 @@ from server.env import SentinelEnv, TASK_SCENARIOS
 from server.models import Action, Observation, StepResult
 
 class ResetRequest(BaseModel):
-    task_id: str
+    task_id: str | None = None
 
 app = FastAPI(title="Project Sentinel — AI Security Firewall", version="1.0.0")
 env = SentinelEnv()
@@ -17,10 +17,11 @@ def root():
     return {"status": "running", "project": "Project Sentinel", "version": "1.0.0", "tasks": 3}
 
 @app.post("/reset", response_model=Observation)
-def reset_environment(body: ResetRequest):
+def reset_environment(body: ResetRequest | None = None):
     """Starts a new episode returning an Observation."""
+    task_id = body.task_id if body else None
     try:
-        return env.reset(task_id=body.task_id)
+        return env.reset(task_id=task_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
