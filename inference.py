@@ -16,7 +16,7 @@ except ImportError:
     print("[DEBUG] openai library not found", file=sys.stderr)
     sys.exit(1)
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1").strip()
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/hf-inference/v1").strip()
 MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct").strip()
 HF_TOKEN = os.environ.get("OPENAI_API_KEY", "").strip() or os.environ.get("HF_TOKEN", "").strip() or os.environ.get("API_KEY", "").strip()
 SERVER_URL = os.environ.get("SERVER_URL", "http://localhost:7860").strip()
@@ -64,7 +64,7 @@ def ask_llm(observation: dict) -> dict:
             
         except Exception as e:
             last_exception = e
-            time.sleep(2 ** attempt)  # Exponential backoff: sleep 1s, 2s, 4s...
+            time.sleep(0.2 * (2 ** attempt))  # Fast backoff: 0.2s, 0.4s, 0.8s
             
     # If all 3 attempts fail (API down, Rate Limited), fall back to safe Quarantine gracefully
     return {"decision": "quarantine", "reasoning": f"API Error fallback", "confidence": 0.0, "error": str(last_exception)}
