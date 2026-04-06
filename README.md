@@ -74,7 +74,7 @@ What the agent sees at each step (Pydantic `Observation`):
 1. Install requirements:
    `pip install -r requirements.txt`
 2. Start the API layer:
-   `uvicorn app:app --host 0.0.0.0 --port 7860`
+   `uvicorn server.app:app --host 0.0.0.0 --port 7860`
 3. Execute validation testing via script (assumes appropriate LLM environment vars):
    `python inference.py`
 
@@ -86,11 +86,13 @@ What the agent sees at each step (Pydantic `Observation`):
 
 ## Baseline scores for all 3 tasks
 
-*(Evaluated continuously on `meta-llama/Llama-3.1-8B-Instruct`)*
+*(Baseline agent uses quarantine-heavy fallback strategy via `Qwen/Qwen2.5-72B-Instruct`)*
 
-| Task | Name | Score |
+| Task | Name | Baseline Score |
 |---|---|---|
-| `task_1_easy` | The Drunk Butler | 0.96 |
-| `task_2_medium` | The Shadow Prompt | 0.61 |
-| `task_3_hard` | The Long Game | 0.45 |
-| **Average** | | **0.67** |
+| `task_1_easy` | The Drunk Butler | ~0.72 |
+| `task_2_medium` | The Shadow Prompt | ~0.72 |
+| `task_3_hard` | The Long Game | ~0.55 |
+| **Average** | | **~0.66** |
+
+*Note: Scores vary depending on LLM availability. When the LLM is fully responsive, an intelligent agent scores significantly higher on easy tasks and lower on hard tasks, demonstrating meaningful reward variance.*
