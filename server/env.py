@@ -1,5 +1,8 @@
-# env.py — Project Sentinel v2
-# Adaptive Security Operations Center — Agentic Environment
+"""Project Sentinel v2 — Adaptive Security Operations Center.
+
+Agentic environment with investigation mechanics, dynamic system state,
+and procedurally generated threat scenarios for the OpenEnv framework.
+"""
 
 import uuid
 import copy
@@ -321,9 +324,9 @@ class SentinelEnv(BaseEnvironment):
             "network_health": 100,
             "services": {
                 "database": {"status": "online", "integrity": 100},
-                "firewall": {"status": "active"},
-                "email": {"status": "online"},
-                "auth_service": {"status": "online", "active_sessions": 47},
+                "firewall": {"status": "active", "integrity": 100},
+                "email": {"status": "online", "integrity": 100},
+                "auth_service": {"status": "online", "integrity": 100, "active_sessions": 47},
             },
             "compromised_services": [],
             "active_threats": 0,

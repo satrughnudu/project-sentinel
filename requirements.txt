@@ -1,56 +1,7 @@
-# ============================================================
-# requirements.txt — Project Sentinel
-# ============================================================
-# This file lists every Python library the project needs.
-# When someone runs:  pip install -r requirements.txt
-# Python's package manager (pip) reads this file and
-# downloads + installs every library listed here.
-#
-# The ">=" means "this version OR any newer version is fine".
-# We pin minimum versions to ones we KNOW work correctly.
-# ============================================================
-
-
-# ── CORE FRAMEWORK ─────────────────────────────────────────
-
-# openenv-core: the Meta/PyTorch OpenEnv framework.
-# Provides the Environment base class that SentinelEnv inherits from.
-# Our env.py imports: from openenv.core.env_server import Environment
-# Version 0.2.0+ includes the stable server-side Environment API.
 openenv-core>=0.2.0
-
-# fastapi: a modern, fast (high-performance) web framework for building
-# APIs with Python. app.py uses this to expose our environment over HTTP.
-# The auto-generated docs at /docs are incredibly useful for testing.
 fastapi>=0.110.0
-
-# uvicorn: an ASGI server that actually *runs* our FastAPI app.
-# Think of FastAPI as the blueprint and uvicorn as the engine.
-# "standard" extras include uvloop and httptools for better performance.
 uvicorn[standard]>=0.29.0
-
-# pydantic: a data-validation library for defining typed data models
-# with automatic validation. models.py uses this for all our data types.
-# v2.0+ has significant performance improvements over v1.
 pydantic>=2.0.0
-
-
-# ── INFERENCE DEPENDENCIES ─────────────────────────────────
-
-# openai: the official OpenAI Python client library.
-# inference.py uses this to call the LLM via an OpenAI-compatible API.
-# Even Hugging Face Inference API supports the OpenAI chat format.
 openai>=1.0.0
-
-# requests: a simple, elegant HTTP library for Python.
-# inference.py uses this to call our FastAPI server endpoints
-# (/reset, /step, /grader) during baseline evaluation.
 requests>=2.31.0
-
-
-# ── LOCAL DEVELOPMENT ──────────────────────────────────────
-
-# python-dotenv: loads environment variables from a .env file.
-# Makes local development easier — no need to set system env vars.
-# On Hugging Face Spaces, variables are set in Space settings instead.
 python-dotenv>=1.0.0
