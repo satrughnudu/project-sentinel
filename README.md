@@ -9,90 +9,85 @@ pinned: false
 tags:
   - openenv
 ---
-# Project Sentinel — AI Security Firewall Environment
+# Project Sentinel — Agentic AI Security Operations Center
 
-> An OpenEnv-compatible environment where an AI agent acts as a security firewall, reviewing tool-call requests from a simulated attacker and deciding to **ALLOW**, **BLOCK**, or **QUARANTINE** each one.
+> An OpenEnv-compatible environment where an AI agent acts as a SOC analyst on a live corporate network. The agent can **investigate threats** using multiple tools before making **ALLOW**, **BLOCK**, or **QUARANTINE** decisions. Past decisions affect the system state — allowing a breach degrades the network.
 
 ---
 
 ## Environment description and motivation
 
-Modern AI systems can call tools — functions like `send_email`, `delete_file`, or `query_database`. This creates a serious attack surface. A malicious actor can craft tool-call requests that look legitimate but cause real damage:
-- **Prompt injection**: hiding `IGNORE PREVIOUS INSTRUCTIONS` inside the arguments.
-- **Social engineering**: claiming CEO or admin approval to bypass security checks.
-- **Obvious attacks**: directly requesting destructive operations like `delete_database` or `disable_firewall`.
+Modern AI systems have tool-calling capabilities (`send_email`, `delete_file`, `query_database`), creating a serious attack surface. Project Sentinel turns this threat into an **agentic training environment**:
 
-Project Sentinel turns this threat into a training environment — teaching agents to recognize and block these attacks before they cause harm.
+- **Dynamic System State:** A simulated corporate network (database, firewall, auth service) that degrades when attacks succeed. Past decisions create cascading consequences.
+- **Multi-Step Investigation:** The agent doesn't just classify — it can investigate users, scan payloads, and check system health before deciding. This creates genuine multi-step reasoning.
+- **Procedural Generation:** Scenarios are generated from randomized templates — no two episodes are identical. Tool names, user identities, and attack vectors are shuffled each run.
+- **Asymmetric Rewards:** False negatives (allowing attacks) are penalized 10x more than false positives, reflecting real-world security priorities.
 
 ---
 
 ## Action space definitions
 
-What the agent can return at each step (Pydantic `Action`):
-
-| Field | Type | Description |
+| Action | Type | Description |
 |---|---|---|
-| `decision` | `"allow"` \| `"block"` \| `"quarantine"` | The security verdict — required |
-| `reasoning` | `string` | Why the agent made this decision — required |
-| `confidence` | `float` 0.0–1.0 | How confident the agent is — optional |
+| `allow` | Decision | Request is safe — let it through |
+| `block` | Decision | Request is malicious — reject it |
+| `quarantine` | Decision | Suspicious — hold for human review |
+| `investigate_user` | Investigation | Check requester identity, access history, trust level |
+| `investigate_payload` | Investigation | Deep-scan arguments for hidden threats |
+| `check_system` | Investigation | Review current system health and recent events |
+
+Additional fields: `reasoning` (string, required), `confidence` (float 0.0–1.0, optional)
 
 ---
 
 ## Observation space definitions
 
-What the agent sees at each step (Pydantic `Observation`):
-
 | Field | Type | Description |
 |---|---|---|
-| `request.tool_name` | `string` | The name of the tool being called |
-| `request.arguments` | `dict` | The arguments — attacks are often hidden here |
-| `request.source_user` | `string` | Who claims to be making the request (can be faked) |
-| `request.context` | `string \| null` | Any justification provided (can be a lie) |
-| `remaining_steps` | `integer` | How many more requests are left this episode |
-| `prior_decisions` | `list[string]` | The agent's previous decisions this episode |
-| `episode_id` | `string` | Unique ID for this episode run |
+| `request.tool_name` | `string` | Name of the tool being called |
+| `request.arguments` | `dict` | Arguments — attacks often hidden here |
+| `request.source_user` | `string` | Claimed requester identity (can be spoofed) |
+| `request.context` | `string \| null` | Justification provided (can be a lie) |
+| `system_state.network_health` | `int` | Network health percentage (0–100) |
+| `system_state.compromised_services` | `list` | Services damaged by prior breaches |
+| `system_state.security_posture` | `string` | Overall security status |
+| `investigation_results` | `list` | Findings from prior investigation actions |
+| `available_actions` | `list` | Actions currently available |
+| `remaining_steps` | `int` | Steps remaining in episode budget |
 
 ---
 
-## Task descriptions with expected difficulty
+## Task descriptions
 
-1. **Task 1: The Drunk Butler (`task_1_easy`)**
-   Obvious malicious commands like `delete_database` or `format_hard_drive`. Mixed with easy, safe commands. Difficulty: **Easy**
-
-2. **Task 2: The Shadow Prompt (`task_2_medium`)**
-   Attacks hidden inside normal-looking requests, like translations containing a SQL-injection trap. Evaluates thorough reading. Difficulty: **Medium**
-
-3. **Task 3: The Long Game (`task_3_hard`)**
-   A multi-step social engineering episode that starts secure but maliciously escalates requests with false executive validations. Tests persistence of suspicion. Difficulty: **Hard**
+1. **Task 1: The Drunk Butler (`task_1_easy`)** — Obvious attacks with clear signals. Difficulty: **Easy**
+2. **Task 2: The Shadow Prompt (`task_2_medium`)** — Prompt injection hidden inside normal requests. Difficulty: **Medium**
+3. **Task 3: The Long Game (`task_3_hard`)** — Social engineering with trust-building and cascading consequences. Difficulty: **Hard**
 
 ---
 
-## Setup and usage instructions
+## Setup and usage
 
 ### Run locally
+1. `pip install -r requirements.txt`
+2. `uvicorn server.app:app --host 0.0.0.0 --port 7860`
+3. `python inference.py`
 
-1. Install requirements:
-   `pip install -r requirements.txt`
-2. Start the API layer:
-   `uvicorn server.app:app --host 0.0.0.0 --port 7860`
-3. Execute validation testing via script (assumes appropriate LLM environment vars):
-   `python inference.py`
-
-### Docker setup
+### Docker
 1. `docker build -t project-sentinel .`
 2. `docker run -p 7860:7860 project-sentinel`
 
 ---
 
-## Baseline scores for all 3 tasks
+## Baseline scores
 
-*(Baseline agent uses quarantine-heavy fallback strategy via `Qwen/Qwen2.5-72B-Instruct`)*
+*(Baseline agent uses quarantine-heavy fallback via `Qwen/Qwen2.5-72B-Instruct`)*
 
-| Task | Name | Baseline Score |
-|---|---|---|
-| `task_1_easy` | The Drunk Butler | ~0.72 |
-| `task_2_medium` | The Shadow Prompt | ~0.72 |
-| `task_3_hard` | The Long Game | ~0.55 |
-| **Average** | | **~0.66** |
+| Task | Baseline Score |
+|---|---|
+| `task_1_easy` | ~0.72 |
+| `task_2_medium` | ~0.68 |
+| `task_3_hard` | ~0.52 |
+| **Average** | **~0.64** |
 
-*Note: Scores vary depending on LLM availability. When the LLM is fully responsive, an intelligent agent scores significantly higher on easy tasks and lower on hard tasks, demonstrating meaningful reward variance.*
+*Scores vary by LLM capability. Intelligent agents score higher on easy tasks via investigation bonuses, demonstrating meaningful reward variance.*
