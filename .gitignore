@@ -2,9 +2,12 @@ __pycache__/
 *.pyc
 *.pyo
 venv/
+.venv/
 .env
+.env.local
 *.egg-info/
 dist/
 build/
 .idea/
 .vscode/
+*.log
